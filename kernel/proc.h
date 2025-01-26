@@ -23,6 +23,7 @@ struct cpu {
   struct proc *proc;          // The process running on this cpu, or null.
   struct context context;     // swtch() here to enter scheduler().
   int noff;                   // Depth of push_off() nesting.
+  //push_off() and pop_off() are used to turn off the interrupts of cpus
   int intena;                 // Were interrupts enabled before push_off()?
 };
 
@@ -103,4 +104,5 @@ struct proc {
   struct file *ofile[NOFILE];  // Open files
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
+  int trace_mask;              // Trace mask
 };

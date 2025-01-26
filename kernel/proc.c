@@ -66,9 +66,11 @@ mycpu(void) {
 // Return the current struct proc *, or zero if none.
 struct proc*
 myproc(void) {
+  //off the interrupts of cpus
   push_off();
   struct cpu *c = mycpu();
   struct proc *p = c->proc;
+  //recover the interrupts of cpus
   pop_off();
   return p;
 }
@@ -226,6 +228,8 @@ userinit(void)
   p->trapframe->sp = PGSIZE;  // user stack pointer
 
   safestrcpy(p->name, "initcode", sizeof(p->name));
+  //cwd:curren working directory
+  //namei:translate a pathname into an inode
   p->cwd = namei("/");
 
   p->state = RUNNABLE;
@@ -281,6 +285,7 @@ fork(void)
   *(np->trapframe) = *(p->trapframe);
 
   // Cause fork to return 0 in the child.
+  //a0:the return value of the syscall
   np->trapframe->a0 = 0;
 
   // increment reference counts on open file descriptors.
@@ -292,6 +297,8 @@ fork(void)
   safestrcpy(np->name, p->name, sizeof(p->name));
 
   pid = np->pid;
+
+  np->trace_mask = p->trace_mask;
 
   np->state = RUNNABLE;
 
@@ -473,10 +480,16 @@ scheduler(void)
         // before jumping back to us.
         p->state = RUNNING;
         c->proc = p;
+        //block in this place 
+        //4 situation to back to scheduler:
+        //1. yield
+        //2. sleep
+        //3. exit
+        //4. interrupts
         swtch(&c->context, &p->context);
 
         // Process is done running for now.
-        // It should have changed its p->state before coming back.
+        // It should have changed its p->state before coming back.  
         c->proc = 0;
 
         found = 1;
@@ -601,7 +614,7 @@ wakeup(void *chan)
 
 // Wake up p if it is sleeping in wait(); used by exit().
 // Caller must hold p->lock.
-static void
+static void 
 wakeup1(struct proc *p)
 {
   if(!holding(&p->lock))

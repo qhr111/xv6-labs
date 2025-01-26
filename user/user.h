@@ -3,6 +3,7 @@ struct rtcdate;
 
 // system calls
 int fork(void);
+//__attribute__ tell the compiler to not generate a warning if the function is not used
 int exit(int) __attribute__((noreturn));
 int wait(int*);
 int pipe(int*);

@@ -30,6 +30,7 @@ main(void)
       printf("init: fork failed\n");
       exit(1);
     }
+    //subprocess
     if(pid == 0){
       exec("sh", argv);
       printf("init: exec sh failed\n");

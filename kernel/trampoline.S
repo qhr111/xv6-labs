@@ -5,10 +5,14 @@
         # (TRAMPOLINE) in user and kernel space so that
         # it continues to work when it switches page tables.
 	#
+        #ld:linker Script
 	# kernel.ld causes this to be aligned
         # to a page boundary.
         #
+        #.section means that to put the following code to trampsec section
 	.section trampsec
+
+#globl means trampoline can be used in other file or module
 .globl trampoline
 trampoline:
 .align 4
@@ -23,7 +27,7 @@ uservec:
         # sscratch points to where the process's p->trapframe is
         # mapped into user space, at TRAPFRAME.
         #
-        
+        #sscratch store the TRAPFRAME
 	# swap a0 and sscratch
         # so that a0 is TRAPFRAME
         csrrw a0, sscratch, a0
