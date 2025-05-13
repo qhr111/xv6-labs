@@ -52,21 +52,25 @@ sys_sbrk(void)
   return addr;
 }
 
+// 休眠后，每个时钟中断会增加ticks的值，然后唤醒等待在ticks上的进程
 uint64
 sys_sleep(void)
 {
   int n;
   uint ticks0;
-
+  // argint：从用户空间获取系统调用参数
   if(argint(0, &n) < 0)
     return -1;
+  //这个锁是用来保护ticks的，避免多个进程同时访问ticks，使得原子性受到破坏
   acquire(&tickslock);
+  // ticks：系统时钟中断的次数,全局变量, 每次时钟中断都会增加这个的次数
   ticks0 = ticks;
   while(ticks - ticks0 < n){
     if(myproc()->killed){
       release(&tickslock);
       return -1;
     }
+    //这里会释放tickslock锁，进入睡眠状态
     sleep(&ticks, &tickslock);
   }
   release(&tickslock);

@@ -14,6 +14,7 @@ int main(int argc, char **argv) {
         close(pp2c[1]);
 
         //父进程从子进程读取一个字符
+        // read会阻塞，直到子进程写入数据
         char buf;
         read(pc2p[0], &buf, 1);
         printf("%d: received pong\n", getpid());
