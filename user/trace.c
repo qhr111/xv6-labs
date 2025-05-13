@@ -14,6 +14,7 @@ main(int argc, char *argv[])
     exit(1);
   }
 
+  // 第一个参数一定需要是一个大于等于2的数字表示要追踪的系统调用
   if (trace(atoi(argv[1])) < 0) {
     fprintf(2, "%s: trace failed\n", argv[0]);
     exit(1);

@@ -20,6 +20,7 @@ struct run {
 
 struct {
   struct spinlock lock;
+  // 一个链表，链表的每个节点是一个空闲的物理页
   struct run *freelist;
 } kmem;
 
@@ -34,6 +35,7 @@ void
 freerange(void *pa_start, void *pa_end)
 {
   char *p;
+  // PGROUNDUP将pa_start向上取整到页边界
   p = (char*)PGROUNDUP((uint64)pa_start);
   for(; p + PGSIZE <= (char*)pa_end; p += PGSIZE)
     kfree(p);
@@ -79,4 +81,20 @@ kalloc(void)
   if(r)
     memset((char*)r, 5, PGSIZE); // fill with junk
   return (void*)r;
+}
+
+// Return the number of free bytes in the kernel.
+uint64
+get_freemem(){
+  uint64 freemem = 0;
+  struct run *r;
+
+  acquire(&kmem.lock);
+  r = kmem.freelist;
+  while(r){
+    freemem += PGSIZE;
+    r = r->next;
+  }
+  release(&kmem.lock);
+  return freemem;
 }

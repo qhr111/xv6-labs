@@ -6,6 +6,7 @@
 #include "memlayout.h"
 #include "spinlock.h"
 #include "proc.h"
+#include "sysinfo.h"
 
 uint64
 sys_exit(void)
@@ -101,4 +102,23 @@ sys_trace(void){
   //save the syscall arg to trace_mask
   argint(0, &(myproc()->trace_mask));
   return 0;
+}
+
+uint64
+sys_sysinfo(struct sysinfo *info){
+   printf("sysinfo is called!\n");
+   struct sysinfo kernel_info;
+   kernel_info.nproc = get_nproc();
+   kernel_info.freemem = get_freemem();
+
+   uint64 addr;
+   if(argaddr(0, &addr) < 0)
+     return -1;
+
+   struct proc *p = myproc();
+   if(copyout(p->pagetable, addr, (char *)&kernel_info, sizeof(struct sysinfo)) < 0){
+     return -1;
+   }
+   printf("sysinfo is ended!\n");
+   return 0;
 }
