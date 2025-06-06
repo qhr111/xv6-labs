@@ -67,6 +67,7 @@ sys_sleep(void)
       release(&tickslock);
       return -1;
     }
+    backtrace();
     sleep(&ticks, &tickslock);
   }
   release(&tickslock);
@@ -94,4 +95,14 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+uint64
+sys_sigalarm(void){
+    if(argint(0, &myproc()->alarm_interval) < 0 ||
+    argaddr(1,(uint64*)&myproc()->alarm_handler) < 0)
+        return -1;
+
+    printf("执行告警!");
+    return 0;
 }

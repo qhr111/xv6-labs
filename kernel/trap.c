@@ -31,7 +31,7 @@ trapinithart(void)
 
 //
 // handle an interrupt, exception, or system call from user space.
-// called from trampoline.S
+// called from trampoline.S (uservec: jr t0)
 //
 void
 usertrap(void)
@@ -77,8 +77,17 @@ usertrap(void)
     exit(-1);
 
   // give up the CPU if this is a timer interrupt.
-  if(which_dev == 2)
+  if(which_dev == 2){
+    if(p->alarm_interval != 0 && ++p->ticks_count == p->alarm_interval && p->is_alarming == 0){
+      // !!!保存寄存器内容!!!
+      memmove(p->alarm_trapframe, p->trapframe, sizeof(struct trapframe));
+      //更改陷阱帧中保留的程序计数器
+      p->trapframe->epc = (uint64)p->alarm_handler;
+      p->ticks_count = 0;
+      p->is_alarming = 1;
+    }
     yield();
+  }
 
   usertrapret();
 }
@@ -134,6 +143,7 @@ void
 kerneltrap()
 {
   int which_dev = 0;
+  //保存状态寄存器状态
   uint64 sepc = r_sepc();
   uint64 sstatus = r_sstatus();
   uint64 scause = r_scause();
@@ -144,12 +154,14 @@ kerneltrap()
     panic("kerneltrap: interrupts enabled");
 
   if((which_dev = devintr()) == 0){
+    // 异常
     printf("scause %p\n", scause);
     printf("sepc=%p stval=%p\n", r_sepc(), r_stval());
     panic("kerneltrap");
   }
 
   // give up the CPU if this is a timer interrupt.
+  // 设备中断
   if(which_dev == 2 && myproc() != 0 && myproc()->state == RUNNING)
     yield();
 
